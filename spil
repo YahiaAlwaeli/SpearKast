@@ -1,0 +1,136 @@
+import math
+import arcade
+
+"Spydkast mod månen"
+BREDDE = 800
+HOEJDE = 600
+SPORLAENGDE = 200
+font = 20
+
+
+class enemy:
+    def __init__(self, fast_punkt, farve):
+        self.fast_punkt = fast_punkt
+        self.punkt = fast_punkt
+        self.farve = farve
+
+    def tegn(self):
+        x, y = self.punkt
+        arcade.draw_circle_filled(x, y, 75, self.farve)
+
+
+class spyd:
+    def __init__(self, fast_punkt, retningsvektor, farve, sporlaengde=None):
+        self.fast_punkt = fast_punkt
+        self.retningsvektor = retningsvektor
+        self.punkt = self.fast_punkt
+        self.farve = farve
+        self.tid = 0
+        self.sporlaengde = sporlaengde
+        self.vinkel = math.pi * 1 / 2
+        self.tryk = False
+        self.hastighed = 100
+
+        if self.sporlaengde:
+            self.spor = list()
+
+    def opdater(self, delta_tid):
+        if self.sporlaengde:
+            self.spor.append(self.punkt)
+        if self.sporlaengde and len(self.spor) >= self.sporlaengde:
+            self.spor.pop(0)
+
+        x, y = self.punkt
+        vx, vy = self.retningsvektor
+        if self.tryk == True:
+            self.tid += delta_tid
+            x = self.hastighed * math.cos(self.vinkel) * self.tid + 30
+            y = self.hastighed * math.sin(self.vinkel) * self.tid - 0.5 * 70 * self.tid ** 2 + 100
+            print(self.hastighed)
+        self.punkt = (x, y)
+        # print(self.punkt)
+
+    def tegn(self):
+        arcade.draw_rectangle_filled(15, 80, 20, 70, arcade.csscolor.PAPAYA_WHIP)
+        arcade.draw_rectangle_filled(400, 20, 800, 50, arcade.csscolor.GREEN)
+        arcade.draw_rectangle_filled(15, 85, 20, 30, arcade.csscolor.RED)
+        x, y = self.punkt
+        arcade.draw_circle_filled(x, y, 5, arcade.csscolor.GREY)
+        for punkt in self.spor:
+            x, y = punkt
+            arcade.draw_circle_filled(x, y, 2, arcade.csscolor.BROWN)
+        if self.tryk == False:
+            arcade.draw_rectangle_filled(20, 95, 5, 30, arcade.csscolor.BROWN, 60)
+
+
+class Vindue(arcade.Window):
+    def __init__(self, width, height, title):
+        super().__init__(width, height, title)
+        arcade.set_background_color(arcade.csscolor.LIGHT_SKY_BLUE)
+
+    def setup(self):
+        self.vinkelx = 0
+        self.vinkely = 0
+        self.vinkels = (self.vinkelx, self.vinkely)
+        self.spyd = spyd((30, 100), self.vinkels, arcade.csscolor.BROWN, 100)
+        self.enemy = enemy((600, 500), arcade.csscolor.GREY)
+
+    def on_key_press(self, symbol: int, modifiers: int):
+        print("1,2,3 har forskellige fart du kan vælge")
+        if symbol == arcade.key.KEY_1:
+            self.spyd.hastighed = 200
+            print(self.spyd.hastighed)
+            print("Nu kan du vælge W E D for at vælge hvilken vinkel du ønsker at kaste med")
+        if symbol == arcade.key.KEY_2:
+            self.spyd.hastighed = 250
+            print(self.spyd.hastighed)
+            print("Nu kan du vælge W E D for at vælge hvilken vinkel du ønsker at kaste med")
+        if symbol == arcade.key.KEY_3:
+            self.spyd.hastighed = 400
+            print(self.spyd.hastighed)
+            print("Nu kan du vælge W E D for at vælge hvilken vinkel du ønsker at kaste med")
+        if symbol == arcade.key.W:
+            self.spyd.vinkel = math.pi * 1 / 4
+            self.spyd.tryk = True
+        if symbol == arcade.key.E:
+            self.spyd.vinkel = math.pi * 2 / 8
+            self.spyd.tryk = True
+        if symbol == arcade.key.D:
+            self.spyd.vinkel = math.pi * 3 / 8
+            self.spyd.tryk = True
+
+    def update(self, delta_tid):
+        s = (int(self.spyd.punkt[0]))
+        e = (int(self.enemy.punkt[0]))
+        s1 = (int(self.spyd.punkt[1]))
+        e1 = (int(self.enemy.punkt[1]))
+
+        dist = math.sqrt((s - e) ** 2 + (s1 - e1) ** 2)
+        if dist > 75:
+            self.spyd.opdater(delta_tid)
+
+
+        else:
+            print("Du KASTEDE SPYDDET HELE VEJEN TIL MÅNEN, DU VANDT")
+        if s > 900:
+            print("loser du tabte")
+            self.tryk = False
+
+        if s1 < 0:
+            print("loser du tabter")
+            self.tryk = False
+
+    def on_draw(self):
+        self.clear()
+        self.spyd.tegn()
+        self.enemy.tegn()
+
+
+def main():
+    vindue = Vindue(BREDDE, HOEJDE, "SpearKast")
+    vindue.setup()
+
+    arcade.run()
+
+
+main()
